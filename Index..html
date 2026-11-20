@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MIRAJ CCTV SHOP</title>
+<style>
+body{font-family:Arial;margin:0;background:#f2f2f2}
+.header{background:#111;color:#fff;padding:15px;text-align:center;font-size:22px;font-weight:bold}
+.card{background:#fff;margin:10px;padding:12px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.1)}
+input,select{width:95%;padding:10px;margin:5px 0;border:1px solid #ccc;border-radius:6px}
+.btn{padding:10px 15px;border:none;border-radius:6px;color:#fff;font-weight:bold;cursor:pointer}
+.btn-green{background:#28a745}.btn-red{background:#dc3545}.btn-blue{background:#007bff}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{border:1px solid #ddd;padding:8px;text-align:center;font-size:14px}
+.del-btn{background:#dc3545;color:#fff;border:none;padding:5px 10px;border-radius:5px;cursor:pointer}
+#login{max-width:350px;margin:80px auto;text-align:center;background:#fff;padding:20px;border-radius:12px}
+#main{display:none}
+</style>
+</head>
+<body>
+
+<div id="login">
+<h2>📹 MIRAJ CCTV SHOP</h2>
+<input id="pass" type="password" placeholder="Password dao">
+<button class="btn btn-green" style="width:100%" onclick="unlock()">Unlock</button>
+<p><small>Password: riaz123</small></p>
+</div>
+
+<div id="main">
+<div class="header">📹 MIRAJ CCTV SHOP</div>
+
+<div class="card">
+<h3>👤 Account Add</h3>
+<input id="accName" placeholder="Customer / Account Name">
+<input id="accPhone" placeholder="Phone Number">
+<button class="btn btn-green" onclick="addAccount()">+ Account Add</button>
+<div id="accList" style="margin-top:10px"></div>
+</div>
+
+<div class="card">
+<h3>🧾 Quotation</h3>
+<select id="accSelect"><option>Account Select Koro</option></select>
+<select id="itemName" onchange="checkUnit()">
+<option value="Camera">Camera</option>
+<option value="DVR">DVR</option>
+<option value="Cat6 Cable">Cat6 Cable</option>
+<option value="Cat6 Cable - Outdoor">Cat6 Cable - Outdoor</option>
+<option value="Power Supply">Power Supply</option>
+<option value="Hard Disk">Hard Disk</option>
+<option value="Connector">Connector</option>
+<option value="Cable - Other">Cable - Other</option>
+</select>
+<div style="display:flex;align-items:center;gap:8px">
+<input id="qty" type="number" placeholder="Qty" style="flex:1">
+<span id="unitLabel" style="font-weight:bold;font-size:18px">Pcs</span>
+</div>
+<input id="price" type="number" placeholder="Price">
+<button class="btn btn-blue" onclick="addItem()">+ Quotation e Add</button>
+<table>
+<tr><th>Item</th><th>Qty</th><th>Price</th><th>Delete</th></tr>
+<tbody id="qList"></tbody>
+</table>
+<h3 id="total">Total: 0 Tk</h3>
+<button class="btn btn-green" onclick="window.print()">🖨️ PDF / Print</button>
+</div>
+</div>
+
+<script>
+function unlock(){
+  if(document.getElementById('pass').value=='riaz123'){
+    document.getElementById('login').style.display='none';
+    document.getElementById('main').style.display='block';
+  } else alert('Password vul!');
+}
+let accounts = JSON.parse(localStorage.getItem('miraj_acc')||'[]');
+let items = JSON.parse(localStorage.getItem('miraj_q')||'[]');
+
+function checkUnit(){
+  let v = document.getElementById('itemName').value;
+  if(v.includes('Cat6') || v.includes('Cable')){
+    document.getElementById('unitLabel').innerText = 'm';
+  } else {
+    document.getElementById('unitLabel').innerText = 'Pcs';
+  }
+}
+
+function addAccount(){
+  let n = document.getElementById('accName').value;
+  let p = document.getElementById('accPhone').value;
+  if(!n) return alert('Nam dao');
+  accounts.push({n:n,p:p});
+  localStorage.setItem('miraj_acc', JSON.stringify(accounts));
+  document.getElementById('accName').value=''; document.getElementById('accPhone').value='';
+  showAcc();
+}
+function deleteAccount(i){
+  if(confirm('Ei account ta delete korbo?')){
+    accounts.splice(i,1);
+    localStorage.setItem('miraj_acc', JSON.stringify(accounts));
+    showAcc();
+  }
+}
+function showAcc(){
+  let h=''; let opt='<option>Account Select Koro</option>';
+  accounts.forEach((a,i)=>{
+    h += `<div style="display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:8px"><span><b>${a.n}</b><br><small>${a.p}</small></span><button class="del-btn" onclick="deleteAccount(${i})">🗑️ Delete</button></div>`;
+    opt += `<option>${a.n}</option>`;
+  });
+  document.getElementById('accList').innerHTML = h || '<small>Kono account nai</small>';
+  document.getElementById('accSelect').innerHTML = opt;
+}
+
+function addItem(){
+  let item = document.getElementById('itemName').value;
+  let q = document.getElementById('qty').value;
+  let pr = document.getElementById('price').value;
+  let unit = (item.includes('Cat6') || item.includes('Cable')) ? 'm' : 'Pcs';
+  if(!q||!pr) return alert('Qty ar Price dao');
+  items.push({item:item,q:q,pr:pr,unit:unit});
+  localStorage.setItem('miraj_q', JSON.stringify(items));
+  showQ();
+}
+function deleteItem(i){
+  if(confirm('Ei item ta delete korbo?')){
+    items.splice(i,1);
+    localStorage.setItem('miraj_q', JSON.stringify(items));
+    showQ();
+  }
+}
+function showQ(){
+  let h=''; let tot=0;
+  items.forEach((it,i)=>{
+    tot += it.q * it.pr;
+    h += `<tr><td>${it.item}</td><td>${it.q} ${it.unit}</td><td>${it.pr}</td><td><button class="del-btn" onclick="deleteItem(${i})">Delete</button></td></tr>`;
+  });
+  document.getElementById('qList').innerHTML=h;
+  document.getElementById('total').innerText='Total: '+tot+' Tk';
+}
+checkUnit(); showAcc(); showQ();
+</script>
+</body>
+</html>
